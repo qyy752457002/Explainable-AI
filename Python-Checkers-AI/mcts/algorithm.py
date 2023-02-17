@@ -206,10 +206,3 @@ class MCTS_agent():
                 moves.append((temp_board, reward, next_turn, terminate, movement_info))
 
         return moves
-
-
-
-
-
-
-
