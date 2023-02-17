@@ -1,12 +1,10 @@
 import random
 from math import sqrt
 from numpy import log as ln
-from copy import deepcopy
+from copy import copy, deepcopy
 import sys
 sys.path.insert(0, "D:\XAI Process Mining Research\Python-Checkers-AI")
 import time
-
-THINKTIME = 20
 
 RED = (255,0,0)
 WHITE = (255, 255, 255)
@@ -14,7 +12,6 @@ WHITE = (255, 255, 255)
 from checkers.constants import BLACK, ROWS, RED, SQUARE_SIZE, COLS, WHITE
 
 class TreeNode():
-
     def __init__(self, board, turn, terminate, parent):
         self.board = board
         self.turn = turn
@@ -26,7 +23,6 @@ class TreeNode():
         self.isFullyExpanded = False
         
 class MCTS_agent():
-
     def __init__(self, board, agent_color, exploration_constant = 1/sqrt(2)):
         self.board = board
         self.agent_color = agent_color
@@ -36,10 +32,7 @@ class MCTS_agent():
 
         node = TreeNode(self.board, self.agent_color, False, None)
 
-        start_time = time.time()
-
-        while time.time() - start_time < THINKTIME:
-            
+        for i in range(4000):
             new_node = self.selection(node)
             if new_node is None:
                 break
@@ -52,9 +45,11 @@ class MCTS_agent():
         return node.children.get(best_node)
 
     def selection(self, node):
+
         while not node.terminate:
             # expand the node if the node is not fully expanded
             if not node.isFullyExpanded:
+                # return the expanded node 
                 return self.expansion(node)
             # if the current node is fully expanded, apply UCB1 to find next node to check
             else:
@@ -63,6 +58,7 @@ class MCTS_agent():
         return node
 
     def expansion(self, node):
+        
         # get all legal moves of current node
         moves = self.get_moves(node)
         
@@ -116,7 +112,7 @@ class MCTS_agent():
                 node = TreeNode(board, next_turn, terminate, node)
 
                 depth += 1
-                if depth == 10:
+                if depth == 20:
                     break
 
         return reward
@@ -174,8 +170,28 @@ class MCTS_agent():
                     temp_board.remove(skip)
                     reward += len(skip) * 40
 
-                # piece, current position, target position, skip
-                movement_info = (temp_piece, (piece.row, piece.col), move_, skip)
+                # get removed piece id if the removed piece exists
+                removed_piece_id = [piece.id for piece in skip]
+
+                cur_x, cur_y = piece.row, piece.col
+                target_x, target_y = move_[0], move_[1]
+
+                dx = target_x - cur_x
+                dy = target_y - cur_y
+
+                move = None
+
+                if dx > 0 and dy > 0:
+                    move = ("right", "up")
+                elif dx < 0 and dy > 0:
+                    move = ("left", "up")
+                elif dx < 0 and dy < 0:
+                    move = ("left", "down")
+                elif dx > 0 and dy < 0:
+                    move = ("right", "down")
+
+                # piece id, move, skip
+                movement_info = (temp_piece.id, move, removed_piece_id)
 
                 if node.turn == RED:
                     next_turn = WHITE
@@ -190,7 +206,6 @@ class MCTS_agent():
                 moves.append((temp_board, reward, next_turn, terminate, movement_info))
 
         return moves
-
 
 
 
