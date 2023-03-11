@@ -26,12 +26,15 @@ class TreeNode():
         self.visits = 0
         self.reward = [0, 0] # reward[0] for white # reward[1] for red
         self.isFullyExpanded = False
+
+    def __len__(self):
+        return len(self.children)
         
 class MCTS_agent():
     def __new__(cls, *args, **kwargs):
         return super(MCTS_agent, cls).__new__(cls)
     
-    def __init__(self, board, agent_color, exploration_constant = 1/sqrt(2), discounted_factor = 0.6):
+    def __init__(self, board, agent_color, exploration_constant = 1/sqrt(2), discounted_factor = 0.7):
         self.board = board
         self.agent_color = agent_color
         self.exploration_constant = exploration_constant
@@ -40,10 +43,17 @@ class MCTS_agent():
     def get_action(self):
 
         def thread_task(lock, node):
-
+    
              for _ in range(400):
+                    
                  lock.acquire()
+
                  selected_node = self.selection(node)
+
+                 if selected_node.terminate:
+                    lock.release()
+                    break
+                 
                  expanded_node = self.expansion(selected_node)
                  lock.release()
 
@@ -87,9 +97,11 @@ class MCTS_agent():
             # if the current node is fully expanded, apply UCT to find next node to check
             else:
                 node = self.choose_best_node(node)
+        # return the node is the node is terminated
+        return node
 
     def expansion(self, node):
-        
+
         # get all legal moves of current node
         moves = self.get_moves(node)
 
@@ -124,6 +136,9 @@ class MCTS_agent():
         while not node.terminate:
             # generate moves
             moves = self.get_moves(node)
+            # break the loop 
+            if not moves:
+                break
             # choose a move
             move = random.choice(moves)
             # generate the next game state
@@ -162,8 +177,10 @@ class MCTS_agent():
             # Apply UCT
             for child in children_nodes:
 
+                # set child value 0 if child node has not been visited
                 if child.visits == 0:
                     child_value = 0 
+                # compute value for the child node using UCT algorithm if child node has been visited
                 else:
                     exploit = child.reward[0] / child.visits
                     explore = sqrt(2 * ln(node.visits) / child.visits)
@@ -180,9 +197,10 @@ class MCTS_agent():
         elif node.turn == RED:
             # Apply UCT
             for child in children_nodes:
-
+                # set child value 0 if child node has not been visited
                 if child.visits == 0:
                     child_value = 0 
+                # compute value for the child node using UCT algorithm if child node has been visited
                 else:
                     exploit = child.reward[0] / child.visits
                     explore = sqrt(2 * ln(node.visits) / child.visits)
