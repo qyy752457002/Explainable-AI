@@ -4,7 +4,6 @@ from numpy import log as ln
 from copy import deepcopy
 import sys
 import threading
-import concurrent.futures
 
 sys.path.append('D:\XAI Process Mining Research\Python-Checkers-AI')
 
@@ -44,45 +43,47 @@ class MCTS_agent():
 
         def thread_task(lock, node):
     
-             for _ in range(400):
+            for _ in range(1000):
                     
-                 lock.acquire()
+                lock.acquire()
+                selected_node = self.selection(node)
 
-                 selected_node = self.selection(node)
-
-                 if selected_node.terminate:
+                if selected_node.terminate:
                     lock.release()
                     break
                  
-                 expanded_node = self.expansion(selected_node)
-                 lock.release()
+                expanded_node = self.expansion(selected_node)
+                lock.release()
 
-                 reward = self.simulation(expanded_node)
+                reward = self.simulation(expanded_node)
 
-                 lock.acquire()
-                 self.backpropagation(selected_node, reward)
-                 lock.release()
+                lock.acquire()
+                self.backpropagation(selected_node, reward)
+                lock.release()
 
         node = TreeNode(self.board, self.agent_color, False, None)
         lock = threading.Lock()
 
-        # create a thread pool with 2 threads
-        pool = concurrent.futures.ThreadPoolExecutor(max_workers = 10)
-
-        # submit tasks to the pool
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-        pool.submit(thread_task(lock, node))
-
-        # # wait for all tasks to complete
-        pool.shutdown(wait = True)
+        # creating threads
+        t1 = threading.Thread(target = thread_task, args=(lock,))
+        t2 = threading.Thread(target = thread_task, args=(lock,))
+        t3 = threading.Thread(target = thread_task, args=(lock,))
+        t4 = threading.Thread(target = thread_task, args=(lock,))
+        t5 = threading.Thread(target = thread_task, args=(lock,))
+  
+        # start threads
+        t1.start()
+        t2.start()
+        t3.start()
+        t4.start()
+        t5.start()
+  
+        # wait until threads finish their job
+        t1.join()
+        t2.join()
+        t3.join()
+        t4.join()
+        t5.join()
 
         best_node = self.choose_best_node(node)
         return node.children.get(best_node)
@@ -136,7 +137,7 @@ class MCTS_agent():
         while not node.terminate:
             # generate moves
             moves = self.get_moves(node)
-            # break the loop 
+            # break the loop if we get empty moves
             if not moves:
                 break
             # choose a move
@@ -231,10 +232,7 @@ class MCTS_agent():
                 # get the temp piece from the temp_board
                 temp_piece = temp_board.get_piece(piece.row, piece.col)
                 # move the piece to the target position
-                temp_board.move(temp_piece, move_[0], move_[1])
-
-                # get the reward on the current temp board
-                reward = temp_board.get_reward()
+                reward = temp_board.move(temp_piece, move_[0], move_[1])
 
                 if skip:
                     temp_board.remove(skip)
