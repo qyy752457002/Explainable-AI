@@ -43,7 +43,7 @@ class MCTS_agent():
 
         def thread_task(lock, node):
     
-            for _ in range(1000):
+            for _ in range(600):
                     
                 lock.acquire()
                 selected_node = self.selection(node)
@@ -65,11 +65,16 @@ class MCTS_agent():
         lock = threading.Lock()
 
         # creating threads
-        t1 = threading.Thread(target = thread_task, args=(lock,))
-        t2 = threading.Thread(target = thread_task, args=(lock,))
-        t3 = threading.Thread(target = thread_task, args=(lock,))
-        t4 = threading.Thread(target = thread_task, args=(lock,))
-        t5 = threading.Thread(target = thread_task, args=(lock,))
+        t1 = threading.Thread(target = thread_task, args=(lock, node))
+        t2 = threading.Thread(target = thread_task, args=(lock, node))
+        t3 = threading.Thread(target = thread_task, args=(lock, node))
+        t4 = threading.Thread(target = thread_task, args=(lock, node))
+        t5 = threading.Thread(target = thread_task, args=(lock, node))
+        t6 = threading.Thread(target = thread_task, args=(lock, node))
+        t7 = threading.Thread(target = thread_task, args=(lock, node))
+        t8 = threading.Thread(target = thread_task, args=(lock, node))
+        t9 = threading.Thread(target = thread_task, args=(lock, node))
+        t10 = threading.Thread(target = thread_task, args=(lock, node))
   
         # start threads
         t1.start()
@@ -77,6 +82,11 @@ class MCTS_agent():
         t3.start()
         t4.start()
         t5.start()
+        t6.start()
+        t7.start()
+        t8.start()
+        t9.start()
+        t10.start()
   
         # wait until threads finish their job
         t1.join()
@@ -84,6 +94,11 @@ class MCTS_agent():
         t3.join()
         t4.join()
         t5.join()
+        t6.join()
+        t7.join()
+        t8.join()
+        t9.join()
+        t10.join()
 
         best_node = self.choose_best_node(node)
         return node.children.get(best_node)
@@ -98,7 +113,7 @@ class MCTS_agent():
             # if the current node is fully expanded, apply UCT to find next node to check
             else:
                 node = self.choose_best_node(node)
-        # return the node is the node is terminated
+        # return the node if the node is terminated
         return node
 
     def expansion(self, node):
@@ -258,7 +273,6 @@ class MCTS_agent():
                 elif dx > 0 and dy < 0:
                     move = ("right", "down")
 
-                # piece id, move, skip
                 movement_info = (temp_piece.id, move, removed_piece_id)
 
                 if node.turn == RED:
