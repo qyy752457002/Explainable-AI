@@ -1,16 +1,17 @@
 # Assets: https://techwithtim.net/wp-content/uploads/2020/09/assets.zip
-import sys
-sys.path.append('D:\XAI Process Mining Research\Python-Checkers-AI')
 import pygame
 from checkers.constants import WIDTH, HEIGHT, SQUARE_SIZE, RED, WHITE
 from checkers.game import Game
 from mcts.algorithm import MCTS_agent
 import pandas as pd
+import sys
+sys.path.append('D:\XAI Process Mining Research\Python-Checkers-AI')
 
 FPS = 60
 
 # WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 # pygame.display.set_caption('Checkers')s
+
 if __name__ == "__main__":
     
     for i in range(1, 101):
@@ -22,11 +23,20 @@ if __name__ == "__main__":
 
         game = Game(None)
 
+        winner = None
+
         while run:
 
             if game.turn == WHITE:
                 white_agent = MCTS_agent(game.get_board(), WHITE)
-                new_board, reward, next_turn, terminate, movement_info = white_agent.get_action()
+                action = white_agent.get_action()
+
+                if action == None:
+                    winner = RED
+                    run = False
+                    continue
+
+                new_board, reward, next_turn, terminate, movement_info = action
 
                 white_traces['piece id'].append(movement_info[0])
                 white_traces['move'].append(movement_info[1])
@@ -35,7 +45,14 @@ if __name__ == "__main__":
 
             else:
                 red_agent = MCTS_agent(game.get_board(), RED)
-                new_board, reward, next_turn, terminate, movement_info = red_agent.get_action()
+                action = red_agent.get_action()
+
+                if action == None:
+                    winner = WHITE
+                    run = False
+                    continue
+
+                new_board, reward, next_turn, terminate, movement_info = action
 
                 red_traces['piece id'].append(movement_info[0])
                 red_traces['move'].append(movement_info[1])
@@ -43,11 +60,14 @@ if __name__ == "__main__":
                 red_traces['reward'].append(reward)
 
             game.ai_move(new_board)
+            winner = game.winner()
 
-            if game.winner() != None:
-                run = False   
+            if winner:
+                run = False
 
         print(f"episode{i} completed")
+        print(f"{winner} won")
+        print("-------------------------------------------------------------------------------------------")
 
         df = pd.DataFrame(white_traces)
         df.to_csv(f"D:/XAI Process Mining Research/Python-Checkers-AI/RL policy traces/white_episode{i}.csv")
