@@ -12,6 +12,8 @@ WHITE = (255, 255, 255)
 
 from checkers.constants import BLACK, ROWS, RED, SQUARE_SIZE, COLS, WHITE
 
+# https://github.com/seoulai/gym/tree/master/seoulai_gym/envs/checkers
+
 class TreeNode():
     def __new__(cls, *args, **kwargs):
         return super(TreeNode, cls).__new__(cls)
@@ -53,6 +55,11 @@ class MCTS_agent():
                     break
                  
                 expanded_node = self.expansion(selected_node)
+                # unable to perform actions at current node
+                if expanded_node == None:
+                    lock.release()
+                    break
+
                 lock.release()
 
                 reward = self.simulation(expanded_node)
@@ -113,6 +120,7 @@ class MCTS_agent():
             # if the current node is fully expanded, apply UCT to find next node to check
             else:
                 node = self.choose_best_node(node)
+
         # return the node if the node is terminated
         return node
 
@@ -120,6 +128,9 @@ class MCTS_agent():
 
         # get all legal moves of current node
         moves = self.get_moves(node)
+
+        if not moves:
+            return None
 
         # get all pruned moves
         pruned_moves = []
@@ -144,6 +155,7 @@ class MCTS_agent():
         return new_node
 
     def simulation(self, node):
+        
         # white, red
         reward = [0, 0]
 
@@ -152,9 +164,10 @@ class MCTS_agent():
         while not node.terminate:
             # generate moves
             moves = self.get_moves(node)
-            # break the loop if we get empty moves
+
             if not moves:
                 break
+
             # choose a move
             move = random.choice(moves)
             # generate the next game state
@@ -192,7 +205,6 @@ class MCTS_agent():
         if node.turn == WHITE:
             # Apply UCT
             for child in children_nodes:
-
                 # set child value 0 if child node has not been visited
                 if child.visits == 0:
                     child_value = 0 
@@ -218,7 +230,7 @@ class MCTS_agent():
                     child_value = 0 
                 # compute value for the child node using UCT algorithm if child node has been visited
                 else:
-                    exploit = child.reward[0] / child.visits
+                    exploit = child.reward[1] / child.visits
                     explore = sqrt(2 * ln(node.visits) / child.visits)
 
                     child_value = exploit + explore
@@ -230,7 +242,7 @@ class MCTS_agent():
                 elif child_value == best_value:
                     best_nodes.append(child)
 
-        return random.choice(best_nodes)
+        return None if not best_nodes else random.choice(best_nodes)
         
     def get_moves(self, node):
 
@@ -251,7 +263,7 @@ class MCTS_agent():
 
                 if skip:
                     temp_board.remove(skip)
-                    reward += len(skip) * 20
+                    reward += len(skip) * 5
 
                 # get removed piece id if the removed piece exists
                 removed_piece_id = [p.id for p in skip]
