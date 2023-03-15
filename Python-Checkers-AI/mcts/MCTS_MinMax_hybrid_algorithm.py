@@ -162,16 +162,13 @@ class MCTS_agent():
         depth = 0
 
         while not node.terminate:
-            # generate moves
-            moves = self.get_moves(node)
-
-            if not moves:
+            # Apply MinMax algorithm to pick the best move 
+            maxEval, best_move = self.MinMax(node, 6, True)
+            # break the while loop if best_move is None
+            if maxEval == float('-inf'):
                 break
-
-            # choose a move
-            move = random.choice(moves)
             # generate the next game state
-            board, r, next_turn, terminate, movement_info = move
+            board, r, next_turn, terminate, movement_info = best_move
             # count reward
             if node.turn == WHITE:
                 reward[0] += r
@@ -179,7 +176,6 @@ class MCTS_agent():
                 reward[1] += r
             # create a new node for the next state
             node = TreeNode(board, next_turn, terminate, node)
-
             # set simulation depth to 20
             depth += 1
             if depth == 20:
@@ -243,6 +239,46 @@ class MCTS_agent():
                     best_nodes.append(child)
 
         return None if not best_nodes else random.choice(best_nodes)
+    
+    def MinMax(self, node, depth, max_player):
+        
+        # get the board from the current node
+        board = node.board
+
+        if depth == 0 or node.board.winner() != None:
+            return board.evaluate(), board
+    
+        if max_player:
+            maxEval = float('-inf')
+            best_move = None
+            for move in self.get_moves(node):
+                # reterive information from the current move
+                board, reward, next_turn, terminate, movement_info = move
+                # create a new node for the next state
+                node = TreeNode(board, next_turn, terminate, node)
+                # get the evaluation
+                evaluation = self.MinMax(node, depth - 1, False)[0]
+                maxEval = max(maxEval, evaluation)
+                if maxEval == evaluation:
+                    best_move = move
+        
+            return maxEval, best_move
+    
+        else:
+            minEval = float('inf')
+            best_move = None
+            for move in self.get_moves(node):
+                # reterive information from the current move
+                board, reward, next_turn, terminate, movement_info = move
+                # create a new node for the next state
+                node = TreeNode(board, next_turn, terminate, node)
+                # get the evaluation
+                evaluation = self.MinMax(node, depth - 1, True)[0]
+                minEval = min(minEval, evaluation)
+                if minEval == evaluation:
+                    best_move = move
+        
+            return minEval, best_move
         
     def get_moves(self, node):
 
@@ -276,7 +312,15 @@ class MCTS_agent():
 
                 move = None
 
-                if dx > 0 and dy > 0:
+                if dx > 0 and dy == 0:
+                    move = ("right")
+                elif dx < 0 and dy == 0:
+                    move = ("left")
+                elif dx == 0 and dy > 0:
+                    move = ("up")
+                elif dx == 0 and dy < 0:
+                    move = ("down")
+                elif dx > 0 and dy > 0:
                     move = ("right", "up")
                 elif dx < 0 and dy > 0:
                     move = ("left", "up")
