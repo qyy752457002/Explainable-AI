@@ -163,7 +163,7 @@ class MCTS_agent():
 
         while not node.terminate:
             # Apply MinMax algorithm to pick the best move 
-            maxEval, best_move = self.MinMax(node, 6, True)
+            maxEval, best_move = self.MiniMax(node, 6, True)
             # break the while loop if best_move is None
             if maxEval == float('-inf'):
                 break
@@ -240,7 +240,7 @@ class MCTS_agent():
 
         return None if not best_nodes else random.choice(best_nodes)
     
-    def MinMax(self, node, depth, max_player):
+    def MiniMax(self, node, depth, max_player):
         
         # get the board from the current node
         board = node.board
@@ -257,7 +257,7 @@ class MCTS_agent():
                 # create a new node for the next state
                 node = TreeNode(board, next_turn, terminate, node)
                 # get the evaluation
-                evaluation = self.MinMax(node, depth - 1, False)[0]
+                evaluation = self.MiniMax(node, depth - 1, False)[0]
                 maxEval = max(maxEval, evaluation)
                 if maxEval == evaluation:
                     best_move = move
@@ -273,7 +273,7 @@ class MCTS_agent():
                 # create a new node for the next state
                 node = TreeNode(board, next_turn, terminate, node)
                 # get the evaluation
-                evaluation = self.MinMax(node, depth - 1, True)[0]
+                evaluation = self.MiniMax(node, depth - 1, True)[0]
                 minEval = min(minEval, evaluation)
                 if minEval == evaluation:
                     best_move = move
