@@ -34,7 +34,7 @@ class MCTS_agent():
     def __new__(cls, *args, **kwargs):
         return super(MCTS_agent, cls).__new__(cls)
     
-    def __init__(self, board, agent_color, exploration_constant = 1/sqrt(2), discounted_factor = 0.7):
+    def __init__(self, board, agent_color, exploration_constant = 1/sqrt(2), discounted_factor = 0.8):
         self.board = board
         self.agent_color = agent_color
         self.exploration_constant = exploration_constant
