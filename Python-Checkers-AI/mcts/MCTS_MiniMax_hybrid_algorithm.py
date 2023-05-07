@@ -3,7 +3,6 @@ from math import sqrt
 from numpy import log as ln
 from copy import deepcopy
 import sys
-import threading
 
 sys.path.append('D:\XAI Process Mining Research\Python-Checkers-AI')
 
@@ -43,69 +42,20 @@ class MCTS_agent():
 
     def get_action(self):
 
-        def thread_task(lock, node):
-    
-            for _ in range(600):
-                    
-                lock.acquire()
-                selected_node = self.selection(node)
-
-                if selected_node.terminate:
-                    lock.release()
-                    break
-                 
-                expanded_node = self.expansion(selected_node)
-                # unable to perform actions at current node
-                if expanded_node == None:
-                    lock.release()
-                    break
-
-                lock.release()
-
-                reward = self.simulation(expanded_node)
-
-                lock.acquire()
-                self.backpropagation(selected_node, reward)
-                lock.release()
-
         node = TreeNode(self.board, self.agent_color, False, None)
-        lock = threading.Lock()
 
-        # creating threads
-        t1 = threading.Thread(target = thread_task, args=(lock, node))
-        t2 = threading.Thread(target = thread_task, args=(lock, node))
-        t3 = threading.Thread(target = thread_task, args=(lock, node))
-        t4 = threading.Thread(target = thread_task, args=(lock, node))
-        t5 = threading.Thread(target = thread_task, args=(lock, node))
-        t6 = threading.Thread(target = thread_task, args=(lock, node))
-        t7 = threading.Thread(target = thread_task, args=(lock, node))
-        t8 = threading.Thread(target = thread_task, args=(lock, node))
-        t9 = threading.Thread(target = thread_task, args=(lock, node))
-        t10 = threading.Thread(target = thread_task, args=(lock, node))
-  
-        # start threads
-        t1.start()
-        t2.start()
-        t3.start()
-        t4.start()
-        t5.start()
-        t6.start()
-        t7.start()
-        t8.start()
-        t9.start()
-        t10.start()
-  
-        # wait until threads finish their job
-        t1.join()
-        t2.join()
-        t3.join()
-        t4.join()
-        t5.join()
-        t6.join()
-        t7.join()
-        t8.join()
-        t9.join()
-        t10.join()
+        for _ in range(6000):
+            selected_node = self.selection(node)
+            if selected_node.terminate:
+                break
+                 
+            expanded_node = self.expansion(selected_node)
+            # unable to perform actions at current node
+            if expanded_node == None:
+                break
+
+            reward = self.simulation(expanded_node)
+            self.backpropagation(selected_node, reward)
 
         best_node = self.choose_best_node(node)
         return node.children.get(best_node)
@@ -163,7 +113,7 @@ class MCTS_agent():
 
         while not node.terminate:
             # Apply MinMax algorithm to pick the best move 
-            maxEval, best_move = self.MiniMax(node, 6, True)
+            maxEval, best_move = self.MiniMax(node, 2, True)
             # break the while loop if best_move is None
             if maxEval == float('-inf'):
                 break
