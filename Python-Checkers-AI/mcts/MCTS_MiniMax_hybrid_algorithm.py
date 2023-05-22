@@ -13,10 +13,7 @@ from checkers.constants import BLACK, ROWS, RED, SQUARE_SIZE, COLS, WHITE
 
 # https://github.com/seoulai/gym/tree/master/seoulai_gym/envs/checkers
 
-class TreeNode():
-    def __new__(cls, *args, **kwargs):
-        return super(TreeNode, cls).__new__(cls)
-    
+class TreeNode(object):
     def __init__(self, board, turn, terminate, parent):
         self.board = board
         self.turn = turn
@@ -26,25 +23,22 @@ class TreeNode():
         self.visits = 0
         self.reward = [0, 0] # reward[0] for white # reward[1] for red
         self.isFullyExpanded = False
-
-    def __len__(self):
-        return len(self.children)
-        
-class MCTS_agent():
-    def __new__(cls, *args, **kwargs):
-        return super(MCTS_agent, cls).__new__(cls)
-    
-    def __init__(self, board, agent_color, exploration_constant = 1/sqrt(2), discounted_factor = 0.8):
+ 
+class MCTS_agent(object):
+    def __init__(self, board, agent_color, iterations, simulation_depth, minimax_depth):
         self.board = board
         self.agent_color = agent_color
-        self.exploration_constant = exploration_constant
-        self.discounted_factor = discounted_factor
+        self.iterations = iterations
+        self.simulation_depth = simulation_depth
+        self.minimax_depth = minimax_depth
+        self.exploration_constant = 1/sqrt(2)
+        self.discounted_factor = 0.8
 
     def get_action(self):
 
         node = TreeNode(self.board, self.agent_color, False, None)
 
-        for _ in range(6000):
+        for _ in range(self.iterations):
             selected_node = self.selection(node)
             if selected_node.terminate:
                 break
@@ -113,7 +107,7 @@ class MCTS_agent():
 
         while not node.terminate:
             # Apply MinMax algorithm to pick the best move 
-            maxEval, best_move = self.MiniMax(node, 2, True)
+            maxEval, best_move = self.MiniMax(node, self.minimax_depth, True)
             # break the while loop if best_move is None
             if maxEval == float('-inf'):
                 break
@@ -128,7 +122,7 @@ class MCTS_agent():
             node = TreeNode(board, next_turn, terminate, node)
             # set simulation depth to 20
             depth += 1
-            if depth == 20:
+            if depth == self.simulation_depth:
                 break
 
         return reward
@@ -231,7 +225,7 @@ class MCTS_agent():
             return minEval, best_move
         
     def get_moves(self, node):
-
+    
         moves = []
 
         # iterate over every single piece in the game board
@@ -249,7 +243,7 @@ class MCTS_agent():
 
                 if skip:
                     temp_board.remove(skip)
-                    reward += len(skip) * 5
+                    reward += len(skip) * 7
 
                 # get removed piece id if the removed piece exists
                 removed_piece_id = [p.id for p in skip]
